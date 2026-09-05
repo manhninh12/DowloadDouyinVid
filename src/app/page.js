@@ -74,6 +74,8 @@ export default function Home() {
   return (
     <main className={styles.container}>
       <div className={styles.hero}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="Douyin Downloader Logo" style={{ width: 80, height: 80, borderRadius: '20px', marginBottom: '1.5rem', objectFit: 'cover', boxShadow: '0 8px 32px rgba(255, 0, 80, 0.3)' }} />
         <h1 className={styles.title}>Douyin Downloader</h1>
         <p className={styles.subtitle}>Tải video TikTok Trung Quốc không có logo chất lượng cao</p>
       </div>

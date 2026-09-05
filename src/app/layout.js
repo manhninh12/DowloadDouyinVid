@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
   title: "Douyin Downloader | Tải video không logo",
   description: "Công cụ tải video Douyin (TikTok Trung Quốc) chất lượng cao, không có watermark (logo) miễn phí và nhanh chóng.",
+  icons: {
+    icon: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {
