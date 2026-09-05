@@ -1,69 +1,146 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import styles from "./page.module.css";
+import toast from "react-hot-toast";
+import { Download, Search, Play, Loader2 } from "lucide-react";
 
 export default function Home() {
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleDownload = async (e) => {
+    e.preventDefault();
+    if (!url) {
+      toast.error("Vui lòng nhập link Douyin!");
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const response = await fetch("/api/download", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Có lỗi xảy ra khi tải dữ liệu");
+      }
+
+      setResult(data);
+      toast.success("Lấy thông tin video thành công!");
+    } catch (error) {
+      toast.error(error.message);
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDirectDownload = async (downloadUrl, title, ext = 'mp4') => {
+    const toastId = toast.loading("Đang chuẩn bị file tải xuống...");
+    try {
+      // Due to CORS on Douyin CDN, fetching blob directly might fail in some browsers.
+      // We'll try fetch first, if it fails, we fallback to opening in new tab.
+      const response = await fetch(downloadUrl);
+      if (!response.ok) throw new Error("CORS or Fetch error");
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Douyin_${title ? title.substring(0, 20) : 'file'}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      
+      toast.success("Bắt đầu tải xuống!", { id: toastId });
+    } catch (error) {
+      toast.error("Bắt đầu tải trong thẻ mới (Do giới hạn của trình duyệt)", { id: toastId });
+      window.open(downloadUrl, '_blank');
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className={styles.container}>
+      <div className={styles.hero}>
+        <h1 className={styles.title}>Douyin Downloader</h1>
+        <p className={styles.subtitle}>Tải video TikTok Trung Quốc không có logo chất lượng cao</p>
+      </div>
+
+      <form className={styles.searchBox} onSubmit={handleDownload}>
+        <input
+          type="text"
+          className={styles.input}
+          placeholder="Dán liên kết chia sẻ Douyin vào đây..."
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        <button type="submit" className={styles.button} disabled={loading}>
+          {loading ? (
+            <Loader2 className={styles.spinner} size={20} />
+          ) : (
+            <Search size={20} />
+          )}
+          Tìm kiếm
+        </button>
+      </form>
+
+      {result && (
+        <div className={styles.resultCard}>
+          <div className={styles.videoInfo}>
+            <div className={styles.thumbnailContainer}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={result.cover || '/next.svg'} 
+                alt="Video Cover" 
+                className={styles.thumbnail} 
+              />
+            </div>
+            <div className={styles.details}>
+              <h2 className={styles.videoTitle}>{result.title || "Video không có tiêu đề"}</h2>
+              
+              <div className={styles.actionButtons}>
+                <button 
+                  className={`${styles.actionButton} ${styles.primary}`}
+                  onClick={() => handleDirectDownload(result.videoUrl, result.title, 'mp4')}
+                >
+                  <Download size={20} />
+                  Tải Video (.mp4)
+                </button>
+                {result.audioUrl && (
+                  <button 
+                    className={styles.actionButton}
+                    onClick={() => handleDirectDownload(result.audioUrl, result.title, 'mp3')}
+                  >
+                    <Download size={20} />
+                    Tải Nhạc (.mp3)
+                  </button>
+                )}
+                <a 
+                  href={result.videoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={styles.actionButton}
+                >
+                  <Play size={20} />
+                  Mở video
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
