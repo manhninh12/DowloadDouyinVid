@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
 import { useState } from "react";
-import styles from "./page.module.css";
+import douyinStyles from "../page.module.css";
+import ytStyles from "./youtube.module.css";
 import toast from "react-hot-toast";
 import { Download, Search, Play, Loader2 } from "lucide-react";
 
-export default function Home() {
+export default function YoutubePage() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -13,7 +14,7 @@ export default function Home() {
   const handleDownload = async (e) => {
     e.preventDefault();
     if (!url) {
-      toast.error("Vui lòng nhập link Douyin!");
+      toast.error("Vui lòng nhập link YouTube!");
       return;
     }
 
@@ -21,7 +22,7 @@ export default function Home() {
     setResult(null);
 
     try {
-      const response = await fetch("/api/download", {
+      const response = await fetch("/api/youtube", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,17 +49,16 @@ export default function Home() {
   const handleDirectDownload = async (downloadUrl, title, ext = 'mp4') => {
     const toastId = toast.loading("Đang chuẩn bị file tải xuống...");
     try {
-      // Use our proxy API to bypass CORS and set the correct filename
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(title || 'Douyin_Video')}&ext=${ext}`;
-      
-      // Open in a hidden iframe or same window to trigger download
+      // Dùng proxy API để đổi tên file tải xuống
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(title || 'YouTube_Video')}&ext=${ext}`;
+
       const link = document.createElement("a");
       link.href = proxyUrl;
-      link.download = ""; // Browser will use Content-Disposition header from proxy
+      link.download = "";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.success("Bắt đầu tải xuống!", { id: toastId });
     } catch (error) {
       toast.error("Bắt đầu tải trong thẻ mới", { id: toastId });
@@ -66,24 +66,26 @@ export default function Home() {
     }
   };
 
+  const containerClass = `${douyinStyles.container} ${ytStyles.youtubeContainer}`;
+
   return (
-    <main className={styles.container}>
-      <div className={styles.hero}>
-        <h1 className={styles.title}>Douyin Downloader</h1>
-        <p className={styles.subtitle}>antromancuop chất lượng cao</p>
+    <main className={containerClass}>
+      <div className={douyinStyles.hero}>
+        <h1 className={`${douyinStyles.title} ${ytStyles.title}`}>YouTube Downloader</h1>
+        <p className={douyinStyles.subtitle}>antromancuop chất lượng cao</p>
       </div>
 
-      <form className={styles.searchBox} onSubmit={handleDownload}>
+      <form className={`${douyinStyles.searchBox} ${ytStyles.searchBox}`} onSubmit={handleDownload}>
         <input
           type="text"
-          className={styles.input}
-          placeholder="Dán liên kết chia sẻ Douyin vào đây..."
+          className={douyinStyles.input}
+          placeholder="Dán liên kết video YouTube vào đây..."
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
-        <button type="submit" className={styles.button} disabled={loading}>
+        <button type="submit" className={`${douyinStyles.button} ${ytStyles.button}`} disabled={loading}>
           {loading ? (
-            <Loader2 className={styles.spinner} size={20} />
+            <Loader2 className={douyinStyles.spinner} size={20} />
           ) : (
             <Search size={20} />
           )}
@@ -92,44 +94,46 @@ export default function Home() {
       </form>
 
       {result && (
-        <div className={styles.resultCard}>
-          <div className={styles.videoInfo}>
-            <div className={styles.thumbnailContainer}>
+        <div className={douyinStyles.resultCard}>
+          <div className={douyinStyles.videoInfo}>
+            <div className={`${douyinStyles.thumbnailContainer} ${ytStyles.thumbnailContainer}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={result.cover || '/next.svg'} 
-                alt="Video Cover" 
-                className={styles.thumbnail} 
+              <img
+                src={result.cover || '/next.svg'}
+                alt="Video Cover"
+                className={douyinStyles.thumbnail}
               />
             </div>
-            <div className={styles.details}>
-              <h2 className={styles.videoTitle}>{result.title || "Video không có tiêu đề"}</h2>
-              
-              <div className={styles.actionButtons}>
-                <button 
-                  className={`${styles.actionButton} ${styles.primary}`}
-                  onClick={() => handleDirectDownload(result.videoUrl, result.title, 'mp4')}
-                >
-                  <Download size={20} />
-                  Tải Video (.mp4)
-                </button>
+            <div className={douyinStyles.details}>
+              <h2 className={douyinStyles.videoTitle}>{result.title || "Video không có tiêu đề"}</h2>
+
+              <div className={douyinStyles.actionButtons}>
+                {result.videoUrl && (
+                  <button
+                    className={`${douyinStyles.actionButton} ${douyinStyles.primary}`}
+                    onClick={() => handleDirectDownload(result.videoUrl, result.title, 'mp4')}
+                  >
+                    <Download size={20} />
+                    Tải Video (.mp4)
+                  </button>
+                )}
                 {result.audioUrl && (
-                  <button 
-                    className={styles.actionButton}
+                  <button
+                    className={douyinStyles.actionButton}
                     onClick={() => handleDirectDownload(result.audioUrl, result.title, 'mp3')}
                   >
                     <Download size={20} />
                     Tải Nhạc (.mp3)
                   </button>
                 )}
-                <a 
-                  href={result.videoUrl}
+                <a
+                  href={result.videoUrl || result.audioUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className={styles.actionButton}
+                  className={douyinStyles.actionButton}
                 >
                   <Play size={20} />
-                  Mở video
+                  Mở trực tiếp
                 </a>
               </div>
             </div>

@@ -1,0 +1,32 @@
+.youtubeContainer {
+  --accent: #ff0000;
+  --accent-hover: #cc0000;
+}
+
+.youtubeContainer .title {
+  background: linear-gradient(135deg, #fff 0%, #ff6666 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.youtubeContainer .searchBox:focus-within {
+  border-color: rgba(255, 0, 0, 0.5);
+  box-shadow: 0 8px 32px rgba(255, 0, 0, 0.15);
+}
+
+.youtubeContainer .button:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
+}
+
+/* Override aspect ratio since YouTube thumbnails are usually 16:9 instead of Douyin's 9:16 */
+.thumbnailContainer {
+  flex: 0 0 320px !important;
+  aspect-ratio: 16/9 !important;
+}
+
+@media (max-width: 768px) {
+  .thumbnailContainer {
+    width: 100% !important;
+    max-width: 320px;
+  }
+}
