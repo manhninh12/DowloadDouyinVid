@@ -5,8 +5,8 @@ import Navbar from "./components/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Douyin Downloader | Tải video không logo",
-  description: "Công cụ tải video Douyin (TikTok Trung Quốc) chất lượng cao, không có watermark (logo) miễn phí và nhanh chóng.",
+  title: "An Trom An Cuop hàng đầu thế giới",
+  description: "Thứ gì của bạn đều là của tôi, thứ gì của tôi vẫn là của tôi",
   icons: {
     icon: '/logo.png',
   },
@@ -18,7 +18,7 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <Navbar />
         {children}
-        <Toaster 
+        <Toaster
           position="top-center"
           toastOptions={{
             style: {
