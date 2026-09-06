@@ -48,25 +48,20 @@ export default function Home() {
   const handleDirectDownload = async (downloadUrl, title, ext = 'mp4') => {
     const toastId = toast.loading("Đang chuẩn bị file tải xuống...");
     try {
-      // Due to CORS on Douyin CDN, fetching blob directly might fail in some browsers.
-      // We'll try fetch first, if it fails, we fallback to opening in new tab.
-      const response = await fetch(downloadUrl);
-      if (!response.ok) throw new Error("CORS or Fetch error");
+      // Use our proxy API to bypass CORS and set the correct filename
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadUrl)}&title=${encodeURIComponent(title || 'Douyin_Video')}&ext=${ext}`;
       
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      
+      // Open in a hidden iframe or same window to trigger download
       const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = `Douyin_${title ? title.substring(0, 20) : 'file'}.${ext}`;
+      link.href = proxyUrl;
+      link.download = ""; // Browser will use Content-Disposition header from proxy
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
       
       toast.success("Bắt đầu tải xuống!", { id: toastId });
     } catch (error) {
-      toast.error("Bắt đầu tải trong thẻ mới (Do giới hạn của trình duyệt)", { id: toastId });
+      toast.error("Bắt đầu tải trong thẻ mới", { id: toastId });
       window.open(downloadUrl, '_blank');
     }
   };
